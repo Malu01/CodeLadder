@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# build
+.next/
+out/
+
+# env
+.env
+.env.local
+.env.*.local
+serviceAccount.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

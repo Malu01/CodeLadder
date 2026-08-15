@@ -1,0 +1,42 @@
+rules_version = '2';
+
+// Firestore security rules for CodeLadder.
+//
+// The FastAPI backend accesses Firestore via the Firebase Admin SDK
+// (serviceAccount.json), which always bypasses these rules. These rules only
+// gate *direct* client SDK access, so they are intentionally locked down:
+//   - levels / challenges  -> readable by any signed-in user (curriculum)
+//   - users/{uid}          -> readable by any signed-in user (leaderboard),
+//                             writable only by the owner
+//   - users/{uid}/submissions -> owner only
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Curriculum (read-only, seeded by the backend)
+    match /levels/{level} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    match /challenges/{challenge} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+    // User profiles. Anyone signed in may read (for ranks/leaderboard),
+    // but only the owner may create/update/delete their own profile.
+    match /users/{uid} {
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == uid;
+      allow update: if request.auth.uid == uid;
+      allow delete: if request.auth.uid == uid;
+    }
+
+    // Per-user submissions: private to the owner.
+    match /users/{uid}/submissions/{submission} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth.uid == uid;
+      allow update: if request.auth.uid == uid;
+      allow delete: if request.auth.uid == uid;
+    }
+  }
+}
